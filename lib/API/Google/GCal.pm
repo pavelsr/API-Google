@@ -2,6 +2,51 @@ package API::Google::GCal;
 use parent 'API::Google';
 # use base 'API::Google';
 
+# ABSTRACT: Google Calendar API client
+
+
+=head1 SYNOPSIS
+
+    use API::Google::GCal;
+    my $gapi = API::Google::GCal->new({ tokensfile => 'config.json' });
+      
+    my $user = 'someuser@gmail.com';
+    my $calendar_id = 'ooqfhagr1a91u1510ffdf7vfpk@group.calendar.google.com';
+    my $timeZone = 'Europe/Moscow';
+    my $event_start = DateTime->now->set_time_zone($timeZone);
+    my $event_end = DateTime->now->add_duration( DateTime::Duration->new( hours => 2) );
+
+    $gapi->refresh_access_token_silent($user); # inherits from API::Google
+
+    $gapi->get_calendars($user);
+    $gapi->get_calendars($user, ['id', 'summary']);  # return only specified fields
+
+    $gapi->get_calendar_id_by_name($user, 'Contacts');
+
+    my $event_data = {};
+    $event_data->{summary} = 'Exibition';
+    $event_data->{description} = 'Amazing cats exibition';
+    $event_data->{location} = 'Angels av. 13';
+    $event_data->{start}{dateTime} = DateTime::Format::RFC3339->format_datetime($event_start);  # '2016-11-11T09:00:00+03:00' format
+    $event_data->{end}{dateTime} = DateTime::Format::RFC3339->format_datetime($event_end);
+    $event_data->{start}{timeZone} = $event_data->{end}{timeZone} = $timeZone; # not obligatory
+
+    $gapi->add_event($user, $calendar_id, $event_data);
+
+    my $freebusy_data = {
+      user => $user,
+      calendar_id => $calendar_id,
+      dt_start => DateTime::Format::RFC3339->format_datetime($event_start),
+      dt_end => DateTime::Format::RFC3339->format_datetime($event_end),
+      timeZone => 'Europe/Moscow'
+    };
+
+    $gapi->busy_time_ranges($freebusy_data);
+    
+  
+=cut
+
+
 sub new {
     my ($class, $params) = @_;
     my $self = API::Google->new($params);
@@ -10,11 +55,9 @@ sub new {
     return $self; # just for clearance
 }
 
-=head2 get_refresh_token_from_storage
+=head2 get_calendars
 
-get_refresh_token_from_storage using Config::JSON get() method
-
-Usage: ```$gapi->get_calendars('pavel.p.serikov@gmail.com', ['id', 'summary']);```
+Get all calendars of particular Google account
 
 =cut
 
@@ -39,7 +82,7 @@ sub get_calendars {
 
 =head2 get_calendar_id_by_name
 
-Name = summary parameter
+Get calendar id by its name. Name = "summary" parameter
 
 =cut
 
@@ -51,7 +94,12 @@ sub get_calendar_id_by_name {
     return $full_id;
 }
 
+
+=head2 add_event
+
 # https://developers.google.com/google-apps/calendar/v3/reference/events/insert
+
+=cut
 
 sub add_event {
     my ($self, $user, $calendar_id, $event_data) = @_;
@@ -63,8 +111,11 @@ sub add_event {
 }
 
 
-## Return List of time ranges during which this calendar should be regarded as busy. 
+=head2 busy_time_ranges
 
+Return List of time ranges during which this calendar should be regarded as busy. 
+
+=cut
 
 sub busy_time_ranges {
    my ($self, $params) = @_;
