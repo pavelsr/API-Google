@@ -1,3 +1,11 @@
+# NAME
+
+API::Google - Perl library for easy access to Google services via their API
+
+# VERSION
+
+version 0.05
+
 # SYNOPSIS
 
     use API::Google;
@@ -31,7 +39,6 @@ config.json must be structured like:
         }
       }
     }
-          
 
 # SUBROUTINES/METHODS
 
@@ -58,3 +65,14 @@ Examples of usage:
         route => 'https://www.googleapis.com/calendar/v3/calendars/'.$calendar_id.'/events',
         user => 'someuser@gmail.com'
     }, $json_payload_if_post);
+
+# AUTHOR
+
+Pavel Serikov <pavelsr@cpan.org>
+
+# COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2016 by Pavel Serikov.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
