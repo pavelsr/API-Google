@@ -4,7 +4,7 @@ API::Google - Perl library for easy access to Google services via their API
 
 # VERSION
 
-version 0.05
+version 0.06
 
 # SYNOPSIS
 
