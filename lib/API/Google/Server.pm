@@ -132,11 +132,10 @@ app->start;
 
 
 __DATA__
+
 @@ oauth.html.ep
 
-<%= 
-	link_to "Click here to get API tokens", 
-	$c->oauth2->auth_url("google", 
+<%= link_to "Click here to get API tokens", $c->oauth2->auth_url("google", 
 		scope => "email profile https://www.googleapis.com/auth/plus.profile.emails.read https://www.googleapis.com/auth/calendar", 
 		authorize_query => { access_type => 'offline'} ) 
 %>

@@ -37,13 +37,15 @@ use parent 'API::Google';
 
     my $freebusy_data = {
       user => $user,
-      calendar_id => $calendar_id,
+      calendarId => $calendar_id,
       dt_start => DateTime::Format::RFC3339->format_datetime($event_start),
       dt_end => DateTime::Format::RFC3339->format_datetime($event_end),
       timeZone => 'Europe/Moscow'
     };
 
     $gapi->busy_time_ranges($freebusy_data);
+
+    $gapi->events_list($freebusy_data);
     
   
 =cut
@@ -129,9 +131,36 @@ sub busy_time_ranges {
       timeMin => $params->{dt_start},
       timeMax => $params->{dt_end},
       timeZone => $params->{timeZone},
-      items => [{ 'id' => $params->{calendar_id} }]
+      items => [{ 'id' => $params->{calendarId} }]
     });
 };
+
+
+
+=head2 events_list
+
+Return list of events in particular calendar
+
+L<https://developers.google.com/google-apps/calendar/v3/reference/events/list>
+
+Usage:
+
+$gapi->events_list({
+  calendarID => 'ooqfhagr1a91u1510ffdf7vfpk@group.calendar.google.com',
+  user => 'someuser@gmail.com'
+});
+
+=cut
+
+sub events_list {
+   my ($self, $params) = @_;
+    $self->api_query({ 
+      method => 'get', 
+      route => $self->{api_base}.'/calendars/'.$params->{calendarId}.'/events',
+      user => $params->{user}
+    })->{items};
+};
+
 
 
 
