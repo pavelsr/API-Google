@@ -88,5 +88,6 @@ sub input_if_not_exists {
 sub runserver {
   my $port = empty_port(3000);
   say "Starting web server. Before authorization don't forget to set redirect_uri to http://127.0.0.1:$port/";
-  Mojolicious::Commands->start_app('API::Google::Server', 'daemon', '-l', 'http://*:'.$port, 'file', $filename);
+  $ENV{'GOAUTH_TOKENSFILE'} = $filename;
+  Mojolicious::Commands->start_app('API::Google::Server', 'daemon', '-l', 'http://*:'.$port);
 }

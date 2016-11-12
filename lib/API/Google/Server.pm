@@ -13,19 +13,20 @@ use feature 'say';
 use Mojo::Util 'getopt';
 
 
-sub return_json_filename {
-  use Cwd;
-  my $cwd = getcwd;
-  opendir my $dir, $cwd or die "Cannot open directory: $!";
-  my @files = readdir $dir;
-  my @j = grep { $_ =~ /\w+.json/ } @files;
-  return $j[0];
-}
+# sub return_json_filename {
+#   use Cwd;
+#   my $cwd = getcwd;
+#   opendir my $dir, $cwd or die "Cannot open directory: $!";
+#   my @files = readdir $dir;
+#   my @j = grep { $_ =~ /\w+.json/ } @files;
+#   return $j[0];
+# }
 
 
-my $f = return_json_filename();
-my $config = Config::JSON->new($f);
+# my $f = return_json_filename();
 
+my $config = Config::JSON->new($ENV{'GOAUTH_TOKENSFILE'});
+delete $ENV{'GOAUTH_TOKENSFILE'};
 
 # authorize_url and token_url can be retrieved from OAuth discovery document
 # https://github.com/marcusramberg/Mojolicious-Plugin-OAuth2/issues/52
@@ -92,7 +93,7 @@ helper get_email => sub {
 
 get "/" => sub {
   my $c = shift;
-  app->log->info("Will store tokens at $f");
+  app->log->info("Will store tokens at $config->getFilename ($config->pathToFile)");
   if ($c->param('code')) {
     app->log->info("Authorization code was retrieved: ".$c->param('code'));
     my $tokens = $c->get_new_tokens($c->param('code'));
