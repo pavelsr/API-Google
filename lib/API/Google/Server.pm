@@ -3,7 +3,6 @@ package API::Google::Server;
 
 # ABSTRACT: Mojolicious::Lite web server for getting Google API tokens via Oauth 2.0 
 
-
 use Mojolicious::Lite;
 use Data::Dumper;
 use Config::JSON;
@@ -11,7 +10,7 @@ use Tie::File;
 use Crypt::JWT qw(decode_jwt);
 use feature 'say';
 use Mojo::Util 'getopt';
-
+# use Mojo::JWT;
 
 # sub return_json_filename {
 #   use Cwd;
@@ -58,22 +57,66 @@ helper get_new_tokens => sub {
   return $tokens;
 };
 
-=method get_google_cert
+# =method get_all_google_jwk_keys
 
-Get one of Google certificates for validation of JSON Web Token
+# Get all Google JWK keys for validation of JSON Web Token
 
-Check https://jwt.io/ and https://developers.google.com/identity/protocols/OpenIDConnect#validatinganidtoken for more details
+# Check https://jwt.io/ and https://developers.google.com/identity/protocols/OpenIDConnect#validatinganidtoken for more details
 
-=cut
+# return arrayref
 
-helper get_google_cert => sub {
-	my $c = shift;
-	my $certs = $c->ua->get('https://www.googleapis.com/oauth2/v3/certs')->res->json;   
-	my $size = keys %$certs;
-	warn $size;
-	#warn Dumper $certs;
-	return $certs->{keys}[0];
-};
+# =cut
+
+# helper get_all_google_jwk_keys => sub {
+# 	my $c = shift;
+# 	my $certs = $c->ua->get('https://www.googleapis.com/oauth2/v3/certs')->res->json;
+#   # return $certs;
+#   my @keys = @{$certs->{keys}};
+#   return \@keys;
+# 	# return $certs->{keys}[1];
+# };
+
+# =method get_google_jwk_key_by_kid
+
+# Return JWK key with specified kid
+
+# $c->get_google_cert_by_kid($kid,$crts)  #  $kid - string, $crts - arrayref
+
+# Example of usage:
+
+# $c->get_google_cert_by_kid($header->{kid},$crts)
+
+# =cut
+
+
+# helper get_google_jwk_key_by_kid => sub {
+#   my ($c, $kid, $jwks_arrayref) = @_;
+
+#   if (!defined $jwks_arrayref) {
+#     warn 'get_google_cert_by_kid(): $ctrs is not defined, obtaining from Google...';
+#     $jwks_arrayref = $c->ua->get('https://www.googleapis.com/oauth2/v3/certs')->res->json->{keys};
+#   }
+
+#   # my @keys = @{$crts->{keys}}; 
+#   my @keys = @$jwks_arrayref;
+#   my $size = scalar @keys;
+#   warn "Found $size JWK keys";
+
+#   if (!defined $kid) {
+#     warn 'get_google_cert_by_kid(): $kid is not defined, will return random certificate';
+#     return $keys[rand @keys];
+#   } else {
+#     for (@keys) {
+#       if ($_->{kid} eq $kid) {
+#         return $_;
+#       }
+#     }
+#   }
+
+#   warn 'JWK key with particular kid not found';
+#   return undef;
+# };
+
 
 
 =method get_email
@@ -93,22 +136,33 @@ helper get_email => sub {
 
 get "/" => sub {
   my $c = shift;
-  app->log->info("Will store tokens at $config->getFilename ($config->pathToFile)");
+  app->log->info("Will store tokens at".$config->getFilename ($config->pathToFile));
   if ($c->param('code')) {
     app->log->info("Authorization code was retrieved: ".$c->param('code'));
+
     my $tokens = $c->get_new_tokens($c->param('code'));
     app->log->info("App got new tokens: ".Dumper $tokens);
 
     if ($tokens) {      
       my $user_data;
+      # warn Dumper $user_data;
       # you can use https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=XYZ123 for development
+
       if ($tokens->{id_token}) {
+
+        # my $jwt = Mojo::JWT->new(claims => $tokens->{id_token});
+        # warn "Mojo header:".Dumper $jwt->header;
+
+        # my $keys = $c->get_all_google_jwk_keys(); # arrayref
+        # my ($header, $data) = decode_jwt( token => $tokens->{id_token}, decode_header => 1, key => '' ); # exctract kid
+        # warn "Decode header :".Dumper $header;
+
       	$user_data = decode_jwt(
       		token => $tokens->{id_token}, 
-      		decode_header => 1, 
-      		key=> $c->get_google_cert()
+      		kid_keys => $c->ua->get('https://www.googleapis.com/oauth2/v3/certs')->res->json,
       	);
-      	warn Dumper $user_data;
+
+        warn "Decoded user data:".Dumper $user_data;
       };
 
       #$user_data->{email};
