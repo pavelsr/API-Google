@@ -154,7 +154,7 @@ sub api_query {
     'Authorization' => 'Bearer '.$self->get_access_token_from_storage($params->{user})
   );
   my $http_method = $params->{method};
-  if ($http_method eq 'get') {
+  if ($http_method eq 'get' || $http_method eq 'delete') {
     return $self->{ua}->$http_method($params->{route} => \%headers)->res->json;
   } elsif (($http_method eq 'post') && $payload) {
     return $self->{ua}->$http_method($params->{route} => \%headers => json => $payload)->res->json;
