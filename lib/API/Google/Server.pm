@@ -10,6 +10,8 @@ use Tie::File;
 use Crypt::JWT qw(decode_jwt);
 use feature 'say';
 use Mojo::Util 'getopt';
+use Mojolicious::Plugin::OAuth2;
+
 # use Mojo::JWT;
 
 # sub return_json_filename {
