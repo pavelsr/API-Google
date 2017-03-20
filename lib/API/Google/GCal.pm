@@ -86,6 +86,8 @@ sub get_calendars {
 
 =head2 get_calendar_id_by_name
 
+$gapi->get_calendar_id_by_name($user, $name)
+
 Get calendar id by its name. Name = "summary" parameter
 
 =cut
@@ -100,6 +102,8 @@ sub get_calendar_id_by_name {
 
 
 =head2 add_event
+
+$gapi->add_event($user, $calendar_id, $event_data)
 
 # https://developers.google.com/google-apps/calendar/v3/reference/events/insert
 
@@ -154,11 +158,18 @@ $gapi->events_list({
 
 sub events_list {
    my ($self, $params) = @_;
-    $self->api_query({ 
+
+   if (!defined $params->{calendarId}) { die "No calendarId provided as parameter"}
+   if (!defined $params->{user}) { die "No user  provided as parameter"}
+   
+   my $res = $self->api_query({ 
       method => 'get', 
       route => $self->{api_base}.'/calendars/'.$params->{calendarId}.'/events',
       user => $params->{user}
-    })->{items};
+    });
+
+   if (defined $res->{items}) { return $res->{items} };
+   if (defined $res->{error}) { return $res };
 };
 
 

@@ -1,5 +1,7 @@
 package API::Google;
 
+use Data::Dumper;
+
 # ABSTRACT: Perl library for easy access to Google services via their API
 
 =head1 SYNOPSIS
@@ -65,7 +67,7 @@ sub new {
 
 sub refresh_access_token {
   my ($self, $params) = @_;
-  warn Dumper $params;
+  warn "Attempt to refresh access_token with params: ".Dumper $params;
   $params->{grant_type} = 'refresh_token';
   $self->{ua}->post('https://www.googleapis.com/oauth2/v4/token' => form => $params)->res->json; # tokens
 };
@@ -98,6 +100,7 @@ sub refresh_access_token_silent {
 		client_secret => $self->client_secret,
 		refresh_token => $self->get_refresh_token_from_storage($user)
 	});
+  warn "New tokens got";
 	my $res = {};
 	$res->{old} = $self->get_access_token_from_storage($user);
 	warn Dumper $tokens;
@@ -111,7 +114,8 @@ sub refresh_access_token_silent {
 
 sub get_refresh_token_from_storage {
   my ($self, $user) = @_;
-  $self->{tokensfile}->get('gapi/tokens/'.$user.'/refresh_token');
+  warn "get_refresh_token_from_storage(".$user.")";
+  return $self->{tokensfile}->get('gapi/tokens/'.$user.'/refresh_token');
 };
 
 sub get_access_token_from_storage {
@@ -150,12 +154,44 @@ Examples of usage:
 
 sub api_query {
   my ($self, $params, $payload) = @_;
+
+  warn "api_query() params : ".Dumper $params;
+
   my %headers = (
     'Authorization' => 'Bearer '.$self->get_access_token_from_storage($params->{user})
   );
+
   my $http_method = $params->{method};
+  my $res;
+
   if ($http_method eq 'get' || $http_method eq 'delete') {
-    return $self->{ua}->$http_method($params->{route} => \%headers)->res->json;
+
+    $res = $self->{ua}->$http_method($params->{route} => \%headers)->res->json;
+
+    # for future:
+    # if ( grep { $_->{message} eq 'Invalid Credentials' && $_->{reason} eq 'authError'} @{$res->{error}{errors}} ) { ... }
+
+    warn "First api_query() result : ".Dumper $res;
+
+    if (defined $res->{error}) { # token expired error handling
+
+      if ($res->{error}{message} eq 'Invalid Credentials')  {
+        warn "Seems like access_token was expired. Attemptimg update it automatically ...";
+        $self->refresh_access_token_silent($params->{user});
+        my $t = $self->get_access_token_from_storage($params->{user});
+        $headers{'Authorization'} = 'Bearer '.$t;
+        warn Dumper \%headers;
+        $res = $self->{ua}->$http_method($params->{route} => \%headers)->res->json;
+      }
+
+    }
+
+    return $res;
+
+    # warn Dumper $res->json;
+    # warn Dumper $res->content->headers;
+
+
   } elsif (($http_method eq 'post') && $payload) {
     return $self->{ua}->$http_method($params->{route} => \%headers => json => $payload)->res->json;
   } else {
