@@ -46,6 +46,10 @@ config.json must be structured like:
 
 Get new access token for user from Google API server and store it in jsonfile
 
+## build\_headers
+
+Keep access\_token in headers always actual 
+
 ## api\_query
 
 Low-level method that can make API query to any Google service

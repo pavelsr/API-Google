@@ -129,6 +129,22 @@ sub set_access_token_to_storage {
 };
 
 
+=head2 build_headers
+
+Keep access_token in headers always actual 
+
+=cut
+
+sub build_headers {
+  my ($self, $user) = @_;
+  my $t = $self->get_access_token_from_storage($user);
+  my $headers = {};
+  $headers->{'Authorization'} = 'Bearer '.$t;
+  return $headers;
+}
+
+
+
 =head2 api_query
 
 Low-level method that can make API query to any Google service
@@ -157,16 +173,14 @@ sub api_query {
 
   warn "api_query() params : ".Dumper $params;
 
-  my %headers = (
-    'Authorization' => 'Bearer '.$self->get_access_token_from_storage($params->{user})
-  );
-
   my $http_method = $params->{method};
+  my $headers = $self->build_headers($params->{user});
   my $res;
 
   if ($http_method eq 'get' || $http_method eq 'delete') {
 
-    $res = $self->{ua}->$http_method($params->{route} => \%headers)->res->json;
+    
+    $res = $self->{ua}->$http_method($params->{route} => $headers)->res->json;
 
     # for future:
     # if ( grep { $_->{message} eq 'Invalid Credentials' && $_->{reason} eq 'authError'} @{$res->{error}{errors}} ) { ... }
@@ -178,10 +192,8 @@ sub api_query {
       while ($res->{error}{message} eq 'Invalid Credentials')  {
         warn "Seems like access_token was expired. Attemptimg update it automatically ...";
         $self->refresh_access_token_silent($params->{user});
-        my $t = $self->get_access_token_from_storage($params->{user});
-        $headers{'Authorization'} = 'Bearer '.$t;
-        warn Dumper \%headers;
-        $res = $self->{ua}->$http_method($params->{route} => \%headers)->res->json;
+        $headers = $self->build_headers($params->{user});
+        $res = $self->{ua}->$http_method($params->{route} => $headers)->res->json;
       }
 
     }
@@ -193,7 +205,7 @@ sub api_query {
 
 
   } elsif (($http_method eq 'post') && $payload) {
-    return $self->{ua}->$http_method($params->{route} => \%headers => json => $payload)->res->json;
+    return $self->{ua}->$http_method($params->{route} => $headers => json => $payload)->res->json;
   } else {
     die 'wrong http_method';
   }
