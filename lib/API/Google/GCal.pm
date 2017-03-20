@@ -146,7 +146,7 @@ L<https://developers.google.com/google-apps/calendar/v3/reference/events/list>
 Usage:
 
 $gapi->events_list({
-  calendarID => 'ooqfhagr1a91u1510ffdf7vfpk@group.calendar.google.com',
+  calendarId => 'ooqfhagr1a91u1510ffdf7vfpk@group.calendar.google.com',
   user => 'someuser@gmail.com'
 });
 
