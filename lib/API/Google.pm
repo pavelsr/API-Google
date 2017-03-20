@@ -175,7 +175,7 @@ sub api_query {
 
     if (defined $res->{error}) { # token expired error handling
 
-      if ($res->{error}{message} eq 'Invalid Credentials')  {
+      while ($res->{error}{message} eq 'Invalid Credentials')  {
         warn "Seems like access_token was expired. Attemptimg update it automatically ...";
         $self->refresh_access_token_silent($params->{user});
         my $t = $self->get_access_token_from_storage($params->{user});
