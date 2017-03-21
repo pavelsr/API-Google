@@ -50,6 +50,8 @@ Get new access token for user from Google API server and store it in jsonfile
 
 Keep access\_token in headers always actual 
 
+$gapi->build\_http\_transactio($user);
+
 ## build\_http\_transaction 
 
 $gapi->build\_http\_transaction({ 

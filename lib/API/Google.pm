@@ -57,6 +57,8 @@ sub new {
   	die 'no json file specified!';
   }
   $h->{ua} = Mojo::UserAgent->new();
+  $h->{debug} = $params->{debug};
+  $h->{max_refresh_attempts} = $params->{max_refresh_attempts} || 5;
   return bless $h, $class;
 }
 
@@ -67,7 +69,7 @@ sub new {
 
 sub refresh_access_token {
   my ($self, $params) = @_;
-  warn "Attempt to refresh access_token with params: ".Dumper $params;
+  warn "Attempt to refresh access_token with params: ".Dumper $params if $self->{debug};
   $params->{grant_type} = 'refresh_token';
   $self->{ua}->post('https://www.googleapis.com/oauth2/v4/token' => form => $params)->res->json; # tokens
 };
@@ -100,10 +102,10 @@ sub refresh_access_token_silent {
 		client_secret => $self->client_secret,
 		refresh_token => $self->get_refresh_token_from_storage($user)
 	});
-  warn "New tokens got";
+  warn "New tokens got" if $self->{debug};
 	my $res = {};
 	$res->{old} = $self->get_access_token_from_storage($user);
-	warn Dumper $tokens;
+	warn Dumper $tokens if $self->{debug};
 	if ($tokens->{access_token}) {
 		$self->set_access_token_to_storage($user, $tokens->{access_token});
 	}
@@ -114,7 +116,7 @@ sub refresh_access_token_silent {
 
 sub get_refresh_token_from_storage {
   my ($self, $user) = @_;
-  warn "get_refresh_token_from_storage(".$user.")";
+  warn "get_refresh_token_from_storage(".$user.")" if $self->{debug};
   return $self->{tokensfile}->get('gapi/tokens/'.$user.'/refresh_token');
 };
 
@@ -132,6 +134,8 @@ sub set_access_token_to_storage {
 =head2 build_headers
 
 Keep access_token in headers always actual 
+
+$gapi->build_http_transactio($user);
 
 =cut
 
@@ -157,7 +161,7 @@ $gapi->build_http_transaction({
 sub build_http_transaction  {
   my ($self, $params) = @_;
 
-  warn "build_http_transaction() params : ".Dumper $params;
+  warn "build_http_transaction() params : ".Dumper $params if $self->{debug};
 
   my $headers = $self->build_headers($params->{user});
   my $http_method = $params->{method};
@@ -201,7 +205,7 @@ Examples of usage:
 sub api_query {
   my ($self, $params, $payload) = @_;
 
-  warn "api_query() params : ".Dumper $params;
+  warn "api_query() params : ".Dumper $params if $self->{debug};
 
   $payload = { payload => $payload };
   %$params = (%$params, %$payload);
@@ -212,15 +216,25 @@ sub api_query {
   # for future:
   # if ( grep { $_->{message} eq 'Invalid Credentials' && $_->{reason} eq 'authError'} @{$res->{error}{errors}} ) { ... }
 
-  warn "First api_query() result : ".Dumper $res;
+  warn "First api_query() result : ".Dumper $res if $self->{debug};
 
   if (defined $res->{error}) { # token expired error handling
 
+    my $attempt = 1;
+
     while ($res->{error}{message} eq 'Invalid Credentials')  {
-      warn "Seems like access_token was expired. Attemptimg update it automatically ...";
+      if ($attempt == $self->{max_refresh_attempts}) {
+        last;
+      }
+      warn "Seems like access_token was expired. Attemptimg update it automatically ..." if $self->{debug};
       $self->refresh_access_token_silent($params->{user});
       $tx = $self->build_http_transaction($params);
       $res = $self->{ua}->start($tx)->res->json;
+      $attempt++;
+    }
+
+    if ($attempt > 1) {
+      warn "access_token was automatically refreshed";
     }
 
   }
