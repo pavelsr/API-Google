@@ -38,6 +38,8 @@ config.json must be structured like:
       }
     }
   }
+
+  You can easily generate such config with goauth CLI tool inluded in this package
 	
 =cut
 
@@ -135,7 +137,7 @@ sub set_access_token_to_storage {
 
 Keep access_token in headers always actual 
 
-$gapi->build_http_transactio($user);
+  $gapi->build_http_transactio($user);
 
 =cut
 
@@ -149,12 +151,12 @@ sub build_headers {
 
 =head2 build_http_transaction 
 
-$gapi->build_http_transaction({ 
-  user => 'someuser@gmail.com',
-  method => 'post',
-  route => 'https://www.googleapis.com/calendar/users/me/calendarList',
-  payload => { key => value }
-})
+  $gapi->build_http_transaction({ 
+    user => 'someuser@gmail.com',
+    method => 'post',
+    route => 'https://www.googleapis.com/calendar/users/me/calendarList',
+    payload => { key => value }
+  })
 
 =cut
 

@@ -40,6 +40,8 @@ config.json must be structured like:
       }
     }
 
+    You can easily generate such config with goauth CLI tool inluded in this package
+
 # SUBROUTINES/METHODS
 
 ## refresh\_access\_token\_silent
@@ -50,16 +52,16 @@ Get new access token for user from Google API server and store it in jsonfile
 
 Keep access\_token in headers always actual 
 
-$gapi->build\_http\_transactio($user);
+    $gapi->build_http_transactio($user);
 
 ## build\_http\_transaction 
 
-$gapi->build\_http\_transaction({ 
-  user => 'someuser@gmail.com',
-  method => 'post',
-  route => 'https://www.googleapis.com/calendar/users/me/calendarList',
-  payload => { key => value }
-})
+    $gapi->build_http_transaction({ 
+      user => 'someuser@gmail.com',
+      method => 'post',
+      route => 'https://www.googleapis.com/calendar/users/me/calendarList',
+      payload => { key => value }
+    })
 
 ## api\_query
 

@@ -59,67 +59,6 @@ helper get_new_tokens => sub {
   return $tokens;
 };
 
-# =method get_all_google_jwk_keys
-
-# Get all Google JWK keys for validation of JSON Web Token
-
-# Check https://jwt.io/ and https://developers.google.com/identity/protocols/OpenIDConnect#validatinganidtoken for more details
-
-# return arrayref
-
-# =cut
-
-# helper get_all_google_jwk_keys => sub {
-# 	my $c = shift;
-# 	my $certs = $c->ua->get('https://www.googleapis.com/oauth2/v3/certs')->res->json;
-#   # return $certs;
-#   my @keys = @{$certs->{keys}};
-#   return \@keys;
-# 	# return $certs->{keys}[1];
-# };
-
-# =method get_google_jwk_key_by_kid
-
-# Return JWK key with specified kid
-
-# $c->get_google_cert_by_kid($kid,$crts)  #  $kid - string, $crts - arrayref
-
-# Example of usage:
-
-# $c->get_google_cert_by_kid($header->{kid},$crts)
-
-# =cut
-
-
-# helper get_google_jwk_key_by_kid => sub {
-#   my ($c, $kid, $jwks_arrayref) = @_;
-
-#   if (!defined $jwks_arrayref) {
-#     warn 'get_google_cert_by_kid(): $ctrs is not defined, obtaining from Google...';
-#     $jwks_arrayref = $c->ua->get('https://www.googleapis.com/oauth2/v3/certs')->res->json->{keys};
-#   }
-
-#   # my @keys = @{$crts->{keys}}; 
-#   my @keys = @$jwks_arrayref;
-#   my $size = scalar @keys;
-#   warn "Found $size JWK keys";
-
-#   if (!defined $kid) {
-#     warn 'get_google_cert_by_kid(): $kid is not defined, will return random certificate';
-#     return $keys[rand @keys];
-#   } else {
-#     for (@keys) {
-#       if ($_->{kid} eq $kid) {
-#         return $_;
-#       }
-#     }
-#   }
-
-#   warn 'JWK key with particular kid not found';
-#   return undef;
-# };
-
-
 
 =method get_email
 

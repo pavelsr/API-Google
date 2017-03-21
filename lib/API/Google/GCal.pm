@@ -86,7 +86,7 @@ sub get_calendars {
 
 =head2 get_calendar_id_by_name
 
-$gapi->get_calendar_id_by_name($user, $name)
+  $gapi->get_calendar_id_by_name($user, $name)
 
 Get calendar id by its name. Name = "summary" parameter
 
@@ -103,7 +103,7 @@ sub get_calendar_id_by_name {
 
 =head2 add_event
 
-$gapi->add_event($user, $calendar_id, $event_data)
+  $gapi->add_event($user, $calendar_id, $event_data)
 
 # https://developers.google.com/google-apps/calendar/v3/reference/events/insert
 
@@ -149,10 +149,10 @@ L<https://developers.google.com/google-apps/calendar/v3/reference/events/list>
 
 Usage:
 
-$gapi->events_list({
-  calendarId => 'ooqfhagr1a91u1510ffdf7vfpk@group.calendar.google.com',
-  user => 'someuser@gmail.com'
-});
+  $gapi->events_list({
+    calendarId => 'ooqfhagr1a91u1510ffdf7vfpk@group.calendar.google.com',
+    user => 'someuser@gmail.com'
+  });
 
 =cut
 
