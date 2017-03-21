@@ -143,6 +143,34 @@ sub build_headers {
   return $headers;
 }
 
+=head2 build_http_transaction 
+
+$gapi->build_http_transaction({ 
+  user => 'someuser@gmail.com',
+  method => 'post',
+  route => 'https://www.googleapis.com/calendar/users/me/calendarList',
+  payload => { key => value }
+})
+
+=cut
+
+sub build_http_transaction  {
+  my ($self, $params) = @_;
+
+  warn "build_http_transaction() params : ".Dumper $params;
+
+  my $http_method = $params->{method};
+  my $tx;
+  if ($http_method eq 'get' || $http_method eq 'delete') {
+    $tx = $self->{ua}->build_tx(uc $http_method => $params->{route} => $headers);
+  } elsif (($http_method eq 'post') && $payload) {
+    $tx = $self->{ua}->build_tx(uc $http_method => $params->{route} => $headers => json => $params->{payload})
+  } else {
+    die 'wrong http_method on no payload if using POST';
+  }
+  return $tx;
+
+}
 
 
 =head2 api_query
@@ -173,42 +201,29 @@ sub api_query {
 
   warn "api_query() params : ".Dumper $params;
 
-  my $http_method = $params->{method};
-  my $headers = $self->build_headers($params->{user});
-  my $res;
+  $payload = { payload => $payload };
+  %$params = (%$params, %$payload);
 
-  if ($http_method eq 'get' || $http_method eq 'delete') {
-
+  my $tx = $self->build_http_transaction($params);
+  my $res = $self->{ua}->start($tx)->res->json;
     
-    $res = $self->{ua}->$http_method($params->{route} => $headers)->res->json;
+  # for future:
+  # if ( grep { $_->{message} eq 'Invalid Credentials' && $_->{reason} eq 'authError'} @{$res->{error}{errors}} ) { ... }
 
-    # for future:
-    # if ( grep { $_->{message} eq 'Invalid Credentials' && $_->{reason} eq 'authError'} @{$res->{error}{errors}} ) { ... }
+  warn "First api_query() result : ".Dumper $res;
 
-    warn "First api_query() result : ".Dumper $res;
+  if (defined $res->{error}) { # token expired error handling
 
-    if (defined $res->{error}) { # token expired error handling
-
-      while ($res->{error}{message} eq 'Invalid Credentials')  {
-        warn "Seems like access_token was expired. Attemptimg update it automatically ...";
-        $self->refresh_access_token_silent($params->{user});
-        $headers = $self->build_headers($params->{user});
-        $res = $self->{ua}->$http_method($params->{route} => $headers)->res->json;
-      }
-
+    while ($res->{error}{message} eq 'Invalid Credentials')  {
+      warn "Seems like access_token was expired. Attemptimg update it automatically ...";
+      $self->refresh_access_token_silent($params->{user});
+      $tx = $self->build_http_transaction($params);
+      $res = $self->{ua}->start($tx)->res->json;
     }
 
-    return $res;
-
-    # warn Dumper $res->json;
-    # warn Dumper $res->content->headers;
-
-
-  } elsif (($http_method eq 'post') && $payload) {
-    return $self->{ua}->$http_method($params->{route} => $headers => json => $payload)->res->json;
-  } else {
-    die 'wrong http_method';
   }
+
+  return $res;
 };
 
 
