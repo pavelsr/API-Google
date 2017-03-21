@@ -159,11 +159,13 @@ sub build_http_transaction  {
 
   warn "build_http_transaction() params : ".Dumper $params;
 
+  my $headers = $self->build_headers($params->{user});
   my $http_method = $params->{method};
   my $tx;
+
   if ($http_method eq 'get' || $http_method eq 'delete') {
     $tx = $self->{ua}->build_tx(uc $http_method => $params->{route} => $headers);
-  } elsif (($http_method eq 'post') && $payload) {
+  } elsif (($http_method eq 'post') && $params->{payload}) {
     $tx = $self->{ua}->build_tx(uc $http_method => $params->{route} => $headers => json => $params->{payload})
   } else {
     die 'wrong http_method on no payload if using POST';

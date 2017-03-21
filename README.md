@@ -4,7 +4,7 @@ API::Google - Perl library for easy access to Google services via their API
 
 # VERSION
 
-version 0.11
+version 0.12
 
 # SYNOPSIS
 
@@ -49,6 +49,15 @@ Get new access token for user from Google API server and store it in jsonfile
 ## build\_headers
 
 Keep access\_token in headers always actual 
+
+## build\_http\_transaction 
+
+$gapi->build\_http\_transaction({ 
+  user => 'someuser@gmail.com',
+  method => 'post',
+  route => 'https://www.googleapis.com/calendar/users/me/calendarList',
+  payload => { key => value }
+})
 
 ## api\_query
 
