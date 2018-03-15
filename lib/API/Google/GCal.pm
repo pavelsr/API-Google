@@ -161,15 +161,22 @@ sub events_list {
 
    if (!defined $params->{calendarId}) { die "No calendarId provided as parameter"}
    if (!defined $params->{user}) { die "No user  provided as parameter"}
-   
-   my $res = $self->api_query({ 
-      method => 'get', 
-      route => $self->{api_base}.'/calendars/'.$params->{calendarId}.'/events',
-      user => $params->{user}
-    });
 
-   if (defined $res->{items}) { return $res->{items} };
-   if (defined $res->{error}) { return $res };
+   my (@events, $page_token);
+   do {
+      my $res = $self->api_query({
+         method => 'get',
+         route => $self->{api_base}.'/calendars/'.$params->{calendarId}.'/events?maxResults=2500' . (defined $page_token ? "&pageToken=$page_token" : ''),
+         user => $params->{user}
+      });
+
+      return $res->{error} if defined $res->{error};
+
+      push @events, @{$res->{items}} if defined $res->{items};
+      $page_token = $res->{nextPageToken};
+   } while (defined $page_token);
+
+   return \@events;
 };
 
 
