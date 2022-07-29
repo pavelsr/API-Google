@@ -24,6 +24,7 @@ use parent 'API::Google';
     $gapi->get_calendars($user, ['id', 'summary']);  # return only specified fields
 
     $gapi->get_calendar_id_by_name($user, 'Contacts');
+    $gapi->get_calendar_name($user, $calendar_id);
 
     my $event_data = {};
     $event_data->{summary} = 'Exibition';
@@ -83,6 +84,21 @@ sub get_calendars {
   } else {
     return $res;
   }
+}
+
+=head2 get_calendar__name
+
+  $gapi->get_calendar_name($user, $id)
+
+Get calendar name by its id. Name = "summary" parameter
+
+=cut
+
+sub get_calendar_name {
+    my ($self, $user, $id) = @_;
+    my $all = $self->get_calendars($user, ['id', 'summary']);   # arr ref
+    my @n = grep { $_->{'id'} eq $id } @$all;
+    return $n[0]->{summary};
 }
 
 =head2 get_calendar_id_by_name
