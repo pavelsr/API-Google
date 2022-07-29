@@ -24,6 +24,7 @@ use parent 'API::Google';
     $gapi->get_calendars($user, ['id', 'summary']);  # return only specified fields
 
     $gapi->get_calendar_id_by_name($user, 'Contacts');
+    $gapi->get_calendar_name($user, $calendar_id);
 
     my $event_data = {};
     $event_data->{summary} = 'Exibition';
@@ -34,6 +35,7 @@ use parent 'API::Google';
     $event_data->{start}{timeZone} = $event_data->{end}{timeZone} = $timeZone; # not obligatory
 
     $gapi->add_event($user, $calendar_id, $event_data);
+    $gapi->delete_event($user, $calendar_id, $event_id);
 
     my $freebusy_data = {
       user => $user,
@@ -84,6 +86,21 @@ sub get_calendars {
   }
 }
 
+=head2 get_calendar__name
+
+  $gapi->get_calendar_name($user, $id)
+
+Get calendar name by its id. Name = "summary" parameter
+
+=cut
+
+sub get_calendar_name {
+    my ($self, $user, $id) = @_;
+    my $all = $self->get_calendars($user, ['id', 'summary']);   # arr ref
+    my @n = grep { $_->{'id'} eq $id } @$all;
+    return $n[0]->{summary};
+}
+
 =head2 get_calendar_id_by_name
 
   $gapi->get_calendar_id_by_name($user, $name)
@@ -98,6 +115,24 @@ sub get_calendar_id_by_name {
     my @n = grep { $_->{'summary'} eq $name } @$all;
     my $full_id = $n[0]->{id};
     return $full_id;
+}
+
+
+=head2 add_event
+
+  $gapi->add_event($user, $calendar_id, $event_data)
+
+# https://developers.google.com/google-apps/calendar/v3/reference/events/delete
+
+=cut
+
+sub delete_event {
+    my ($self, $user, $calendar_id, $event_id) = @_;
+    $self->api_query({ 
+      method => 'delete', 
+      route => $self->{api_base}.'/calendars/'.$calendar_id.'/events/'.$event_id,
+      user => $user
+    });
 }
 
 
